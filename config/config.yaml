@@ -1,1 +1,15 @@
-ECHO is on.
+# config/config.yaml
+
+data:
+  raw_data_path: "C:/Users/BirirM/ACFA/data/raw"
+  processed_data_path: "C:/Users/BirirM/ACFA/data/processed"
+
+model:
+  input_shape: [224, 224, 3]
+  lstm_units: 64
+  batch_size: 32
+  epochs: 10
+
+logging:
+  level: INFO
+  file: logs/project.log

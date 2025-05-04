@@ -1,36 +1,40 @@
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
-import joblib
+import numpy as np
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from scripts.model import create_model
+import os
 
-def train_model(X_train, y_train):
-    """
-    Train a Random Forest Classifier on the training data.
-    :param X_train: Training features.
-    :param y_train: Training labels.
-    :return: Trained model.
-    """
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    return model
+# Load your dataset here
+def load_data():
+    # Replace this with actual loading from disk or dataset folder
+    # Example dummy grayscale data
+    x_train = np.random.rand(300, 224, 224, 1).astype('float32')  # 300 grayscale images
+    y_train = np.random.randint(0, 3, size=(300,))  # 3 classes
+    y_train = to_categorical(y_train, num_classes=3)
+    return x_train, y_train
 
-def evaluate_model(model, X_test, y_test):
-    """
-    Evaluate the model on the test data and return a performance report.
-    :param model: Trained model.
-    :param X_test: Test features.
-    :param y_test: Test labels.
-    :return: None.
-    """
-    y_pred = model.predict(X_test)
-    print("Classification Report:")
-    print(classification_report(y_test, y_pred))
+# Load training data
+x_train, y_train = load_data()
 
-def save_model(model, model_path):
-    """
-    Save the trained model to a file.
-    :param model: Trained model.
-    :param model_path: Path to save the model.
-    :return: None.
-    """
-    joblib.dump(model, model_path)
-    print(f"Model saved at {model_path}")
+# Data augmentation (optional but good for training generalization)
+datagen = ImageDataGenerator(
+    rotation_range=10,
+    zoom_range=0.1,
+    width_shift_range=0.1,
+    height_shift_range=0.1,
+    horizontal_flip=True
+)
+datagen.fit(x_train)
+
+# Create and compile model
+model = create_model(input_shape=(224, 224, 1))
+model.compile(optimizer=Adam(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(datagen.flow(x_train, y_train, batch_size=16), epochs=10, steps_per_epoch=len(x_train)//16)
+
+# Save the trained model
+os.makedirs("models", exist_ok=True)
+model.save("models/auth_model.h5")
+print("✅ Model training complete and saved to 'models/auth_model.h5'")

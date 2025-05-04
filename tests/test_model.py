@@ -1,20 +1,17 @@
-import unittest
-from scripts.train_model import train_model, evaluate_model, save_model
-from scripts.preprocessing import preprocess_data, split_data
+# tests/test_model.py
 
-class TestModel(unittest.TestCase):
+import pytest
+from tensorflow.keras.models import load_model
+from scripts.data_loader import load_image_data_from_processed
 
-    def test_train_model(self):
-        df = preprocess_data(pd.read_csv('data/processed/Altered-Easy/sample_data.csv'))
-        X_train, X_test, y_train, y_test = split_data(df)
-        model = train_model(X_train, y_train)
-        self.assertIsNotNone(model)  # Ensure the model is trained
-        
-    def test_model_evaluation(self):
-        df = preprocess_data(pd.read_csv('data/processed/Altered-Easy/sample_data.csv'))
-        X_train, X_test, y_train, y_test = split_data(df)
-        model = train_model(X_train, y_train)
-        evaluate_model(model, X_test, y_test)  # Ensure no errors during evaluation
-
-if __name__ == '__main__':
-    unittest.main()
+def test_model_accuracy():
+    # Load the trained model
+    model = load_model('models/trained_models/fingerprint_model.h5')
+    
+    # Load test data
+    test_images, test_labels = load_image_data_from_processed('C:/Users/BirirM/ACFA/data/processed/Altered-Medium')
+    
+    # Evaluate the model
+    loss, accuracy = model.evaluate(test_images, test_labels)
+    
+    assert accuracy > 0.85, f"Test accuracy is too low: {accuracy}"  # Expecting at least 85% accuracy

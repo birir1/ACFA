@@ -1,28 +1,27 @@
+from PIL import Image
 import os
-import pandas as pd
+import numpy as np
 
-def load_raw_data(file_path):
-    """
-    Loads raw data from a given file path (e.g., CSV, JSON).
-    :param file_path: Path to the raw data file.
-    :return: DataFrame containing the raw data.
-    """
-    if file_path.endswith('.csv'):
-        return pd.read_csv(file_path)
-    elif file_path.endswith('.json'):
-        return pd.read_json(file_path)
-    else:
-        raise ValueError("Unsupported file format: Only CSV and JSON are supported.")
+def load_image_data_from_processed(processed_path):
+    images = []
+    labels = []
 
-def load_all_raw_data(data_directory):
-    """
-    Loads all raw data files from the specified directory.
-    :param data_directory: Directory containing raw data files.
-    :return: List of DataFrames.
-    """
-    raw_data_files = [f for f in os.listdir(data_directory) if f.endswith('.csv') or f.endswith('.json')]
-    data_frames = []
-    for file in raw_data_files:
-        file_path = os.path.join(data_directory, file)
-        data_frames.append(load_raw_data(file_path))
-    return data_frames
+    # Assuming images are organized in folders corresponding to class labels
+    class_folders = os.listdir(processed_path)
+    
+    for folder in class_folders:
+        class_path = os.path.join(processed_path, folder)
+        
+        if os.path.isdir(class_path):
+            for filename in os.listdir(class_path):
+                if filename.endswith('.BMP'):  # Only load BMP files
+                    img_path = os.path.join(class_path, filename)
+                    img = Image.open(img_path).convert('RGB')  # Convert grayscale to RGB
+                    img = img.resize((224, 224))  # Resize to match input size (224x224)
+                    images.append(np.array(img))
+                    labels.append(folder)  # Assuming folder name as the label
+
+    images = np.array(images)
+    labels = np.array(labels)
+    
+    return images, labels
